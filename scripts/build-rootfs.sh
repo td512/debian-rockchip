@@ -31,8 +31,8 @@ if [[ -f ubuntu-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz ]]
     exit 0
 fi
 
-git clone https://github.com/Joshua-Riek/ubuntu-live-build.git
+git clone https://github.com/td512/debian-live-build.git
 cd ubuntu-live-build
 bash ./docker/build-livecd-rootfs.sh
 bash ./build.sh "--${PROJECT}" "--${RELEASE}"
-mv "./build/ubuntu-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ../
+mv "./build/debian-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ../

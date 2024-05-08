@@ -33,7 +33,7 @@ if [[ -z ${DESKTOP} ]]; then
 fi
 
 # shellcheck source=/dev/null
-source "../config/projects/${DESKTOP}.sh"
+source "../config/desktops/${DESKTOP}.sh"
 
 if [[ -f debian-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz || -f debian-${DESKTOP}-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz ]]; then
     exit 0

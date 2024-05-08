@@ -41,6 +41,4 @@ fi
 
 git clone https://github.com/td512/debian-live-build.git
 cd debian-live-build
-pwd
-ls
-bash ./build.sh "--${PROJECT}" "--${RELEASE}" "--desktop ${DESKTOP}"
+bash ./build.sh "--${PROJECT}" "--${RELEASE}" "--desktop-environment ${DESKTOP}"

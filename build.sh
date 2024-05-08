@@ -51,6 +51,14 @@ while [ "$#" -gt 0 ]; do
             export BOARD="${2}"
             shift 2
             ;;
+        -d=*|--desktop=*)
+            export DESKTOP="${1#*=}"
+            shift
+            ;;
+        -d|--desktop)
+            export DESKTOP="${2}"
+            shift 2
+            ;;
         -r=*|--release=*)
             export RELEASE="${1#*=}"
             shift
@@ -74,11 +82,6 @@ while [ "$#" -gt 0 ]; do
         -k|--kernel)
             export KERNEL_TARGET="${2}"
             shift 2
-            ;;
-        -d|--docker)
-            DOCKER="docker run --privileged --network=host --rm -it -v \"$(pwd)\":/opt -e BOARD -e VENDOR -e LAUNCHPAD -e MAINLINE -e SERVER_ONLY -e DESKTOP_ONLY -e KERNEL_ONLY -e UBOOT_ONLY ubuntu-rockchip-build /bin/bash"
-            docker build -t ubuntu-rockchip-build docker
-            shift
             ;;
         -ko|--kernel-only)
             export KERNEL_ONLY=Y
@@ -141,6 +144,27 @@ if [ -n "${BOARD}" ]; then
         echo "Error: \"${BOARD}\" is an unsupported board"
         exit 1
     done
+fi
+
+if [ "${DESKTOP}" == "help" ]; then
+    for file in config/desktops/*; do
+        basename "${file%.sh}"
+    done
+    exit 0
+fi
+
+if [ -n "${DESKTOP}" ]; then
+    while :; do
+        for file in config/desktops/*; do
+            if [ "${DESKTOP}" == "$(basename "${file%.sh}")" ]; then
+                # shellcheck source=/dev/null
+                source "${file}"
+                break 2
+            fi
+        done
+        echo "Error: \"${DESKTOP}\" is an unsupported release"
+        exit 1
+    done 
 fi
 
 if [ "${RELEASE}" == "help" ]; then

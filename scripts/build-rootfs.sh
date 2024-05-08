@@ -27,12 +27,20 @@ fi
 # shellcheck source=/dev/null
 source "../config/projects/${PROJECT}.sh"
 
-if [[ -f debian-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz ]]; then
+if [[ -z ${DESKTOP} ]]; then
+    echo "Error: DESKTOP is not set"
+    exit 1
+fi
+
+# shellcheck source=/dev/null
+source "../config/projects/${DESKTOP}.sh"
+
+if [[ -f debian-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz || -f debian-${DESKTOP}-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz ]]; then
     exit 0
 fi
 
 git clone https://github.com/td512/debian-live-build.git
 cd debian-live-build
-bash ./docker/build-livecd-rootfs.sh
-bash ./build.sh "--${PROJECT}" "--${RELEASE}"
-mv "./build/debian-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ../
+bash ./build.sh "--${PROJECT}" "--${RELEASE}" "--desktop-environment ${DESKTOP}"
+mv "./build/debian-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ../
+mv "./build/debian-${RELEASE_VERSION}-${DESKTOP}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ../

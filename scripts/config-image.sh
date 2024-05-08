@@ -95,7 +95,7 @@ overlay_dir=../overlay
 
 # Extract the compressed root filesystem
 rm -rf ${chroot_dir} && mkdir -p ${chroot_dir}
-tar -xpJf "ubuntu-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" -C ${chroot_dir}
+tar -xpJf "ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" -C ${chroot_dir}
 
 # Mount the root filesystem
 setup_mountpoint $chroot_dir
@@ -124,6 +124,6 @@ chroot ${chroot_dir} apt-get -y autoremove
 teardown_mountpoint $chroot_dir
 
 # Compress the root filesystem and then build a disk image
-cd ${chroot_dir} && tar -cpf "../ubuntu-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar" . && cd .. && rm -rf ${chroot_dir}
-../scripts/build-image.sh "ubuntu-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar"
-rm -f "ubuntu-${RELASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar"
+cd ${chroot_dir} && tar -cpf "../ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar" . && cd .. && rm -rf ${chroot_dir}
+../scripts/build-image.sh "ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar"
+rm -f "ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar"

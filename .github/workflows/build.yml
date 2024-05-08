@@ -17,7 +17,25 @@ jobs:
           release:
             - bookworm
             - trixie
+          desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
     steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
       - name: Get more disk space
         uses: jlumbroso/free-disk-space@main
         with:

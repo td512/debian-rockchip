@@ -36,6 +36,16 @@ jobs:
         run: exit 1
         if: matrix.project == 'desktop' && matrix.desktop == 'none'
 
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.suite == 'bookworm' && '12' || matrix.suite == 'trixie' && '13' }}-${{ matrix.desktop }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.suite == 'bookworm' && '12' || matrix.suite == 'trixie' && '13' }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
       - name: Get more disk space
         uses: jlumbroso/free-disk-space@main
         with:
@@ -71,9 +81,11 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4.3.1
         with:
-            name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs
-            path: ./build/debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64.rootfs.tar.xz
+            name: '${{ env.filename }}'
+            path: ./${{ env.filename }}.tar.xz
             if-no-files-found: error
+            overwrite: true
+            compression-level: 9
 
   build:
     runs-on: ubuntu-latest

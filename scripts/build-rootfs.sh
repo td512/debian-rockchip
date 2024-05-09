@@ -42,3 +42,5 @@ fi
 git clone https://github.com/td512/debian-live-build.git
 cd debian-live-build
 bash ./build.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
+mv "debian-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ..
+mv "debian-${DESKTOP}-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" ..

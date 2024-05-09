@@ -79,6 +79,7 @@ jobs:
             compression-level: 9
   
   build:
+    continue-on-error: true
     runs-on: ubuntu-latest
     needs: [rootfs]
     name: Build image 

@@ -7,7 +7,7 @@ run-name: Build Debian 12 and 13
 
 jobs:
   cache:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-2vcpu-ubuntu-2204-arm
     name: Build OS Cache
     strategy:
       matrix:
@@ -22,21 +22,10 @@ jobs:
       
       - name: Restore OS Cache
         id: cache
-        uses: actions/cache/restore@v4
+        uses: buildjet/cache/restore@v4
         with:
           path: ./os.tar
           key: 'os-cache-${{ matrix.suite }}'
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install dependencies
@@ -72,14 +61,14 @@ jobs:
         run: sudo tar -p -cf os.tar --sort=name --xattrs debian
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - uses: actions/cache@v4
+      - uses: buildjet/cache@v4
         with:
           path: ./os.tar
           key: 'os-cache-${{ matrix.suite }}'
         if: steps.cache.outputs.cache-hit != 'true'
   rootfs:
     continue-on-error: true
-    runs-on: ubuntu-latest
+    runs-on: buildjet-2vcpu-ubuntu-2204-arm
     needs: [cache]
     name: Build rootfs 
     strategy:
@@ -119,16 +108,6 @@ jobs:
           echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64.rootfs">>$GITHUB_ENV
         if: matrix.project == 'server'
 
-      - name: Get more disk space
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          swap-storage: true
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -138,7 +117,7 @@ jobs:
 
       - name: Restore OS Cache
         id: cache
-        uses: actions/cache/restore@v4
+        uses: buildjet/cache/restore@v4
         with:
           path: ./build/debian-live-build/os.tar
           key: 'os-cache-${{ matrix.suite }}'
@@ -171,7 +150,7 @@ jobs:
   
   build:
     continue-on-error: true
-    runs-on: ubuntu-latest
+    runs-on: buildjet-2vcpu-ubuntu-2204-arm
     needs: [rootfs]
     name: Build image 
 

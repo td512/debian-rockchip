@@ -39,12 +39,12 @@ jobs:
 
       - name: prepare filename (desktop)
         run: |
-          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-${{ matrix.project }}-arm64.rootfs">>$GITHUB_ENV
         if: matrix.project == 'desktop'
         
       - name: prepare filename (server)
         run: |
-          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.project }}-arm64.rootfs">>$GITHUB_ENV
         if: matrix.project == 'server'
 
       - name: Get more disk space

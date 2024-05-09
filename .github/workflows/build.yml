@@ -12,8 +12,8 @@ jobs:
     strategy:
       matrix:
         suite:
-            - bookworm
-            - trixie
+          - bookworm
+          - trixie
     steps:        
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,10 +117,10 @@ jobs:
 
       - name: Restore OS Cache
         id: cache
-        uses: actions/cache/restore@v4
+        uses: buildjet/cache/restore@v4
         with:
           path: ./build/debian-live-build/os.tar
-          key: 'os-cache-${{ matrix.release }}'
+          key: os-cache-${{ matrix.release }}
 
       - name: Extract OS Cache
         shell: bash

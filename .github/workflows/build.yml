@@ -21,6 +21,7 @@ jobs:
           repository: 'td512/debian-live-build'
       
       - name: Restore OS Cache
+        id: cache
         uses: actions/cache/restore@v4
         with:
           path: ./os.tar
@@ -128,6 +129,7 @@ jobs:
         run: git lfs fetch && git lfs checkout
 
       - name: Restore OS Cache
+        id: cache
         uses: actions/cache/restore@v4
         with:
           path: ./build/debian-live-build/os.tar

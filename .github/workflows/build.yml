@@ -54,15 +54,10 @@ jobs:
         shell: bash
         run: git lfs fetch && git lfs checkout
 
-      - name: Build OS (No Cache)
+      - name: Build OS
         shell: bash
         run: | 
           sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
-
-      - name: Build OS (With Cache)
-        shell: bash
-        run: | 
-          sudo ./build.sh --cached --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1

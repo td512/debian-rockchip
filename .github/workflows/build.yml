@@ -57,6 +57,13 @@ jobs:
         run: scripts/complete-debootstrap.sh $(pwd)
         if: steps.cache.outputs.cache-hit != 'true'
 
+      - name: post debootstrap
+        run: |
+          sudo cp scripts/post-debootstrap.sh debian
+          sudo chroot debian ./post-debootstrap.sh $SUITE
+          sudo rm debian/post-debootstrap.sh
+        if: steps.cache.outputs.cache-hit != 'true'
+
       - name: cleanup script
         run: scripts/cleanup.sh $(pwd)
         if: steps.cache.outputs.cache-hit != 'true'

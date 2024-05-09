@@ -68,13 +68,12 @@ jobs:
         shell: bash
         run: | 
           sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
-          ls build
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1
         with:
             name: '${{ env.filename }}'
-            path: ./${{ env.filename }}.tar.xz
+            path: ./build/${{ env.filename }}.tar.xz
             if-no-files-found: error
             overwrite: true
             compression-level: 9

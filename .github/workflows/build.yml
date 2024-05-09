@@ -39,12 +39,12 @@ jobs:
 
       - name: prepare filename (desktop)
         run: |
-          echo "filename=debian-${{ matrix.suite == 'bookworm' && '12' || matrix.suite == 'trixie' && '13' }}-${{ matrix.desktop }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
         if: matrix.project == 'desktop'
         
       - name: prepare filename (server)
         run: |
-          echo "filename=debian-${{ matrix.suite == 'bookworm' && '12' || matrix.suite == 'trixie' && '13' }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
         if: matrix.project == 'server'
 
       - name: Get more disk space
@@ -66,7 +66,9 @@ jobs:
 
       - name: Build
         shell: bash
-        run: sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
+        run: | 
+          sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
+          ls build
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1

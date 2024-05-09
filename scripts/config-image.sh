@@ -43,6 +43,14 @@ fi
 # shellcheck source=/dev/null
 source "../config/projects/${PROJECT}.sh"
 
+if [[ -z ${DESKTOP} ]]; then
+    echo "Error: DESKTOP is not set"
+    exit 1
+fi
+
+# shellcheck source=/dev/null
+source "../config/desktops/${DESKTOP}.sh"
+
 setup_mountpoint() {
     local mountpoint="$1"
 
@@ -95,7 +103,14 @@ overlay_dir=../overlay
 
 # Extract the compressed root filesystem
 rm -rf ${chroot_dir} && mkdir -p ${chroot_dir}
-tar -xpJf "ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs.tar.xz" -C ${chroot_dir}
+
+if [[ "$PROJECT" == "server" ]]; then
+    DESTNAME="debian-${version}-preinstalled-${name}-arm64.rootfs"
+else
+    DESTNAME="debian-${version}-${DESKTOP}-preinstalled-${name}-arm64.rootfs"
+fi
+
+tar -xpJf "${DESTNAME}.tar.xz" -C ${chroot_dir}
 
 # Mount the root filesystem
 setup_mountpoint $chroot_dir
@@ -124,6 +139,6 @@ chroot ${chroot_dir} apt-get -y autoremove
 teardown_mountpoint $chroot_dir
 
 # Compress the root filesystem and then build a disk image
-cd ${chroot_dir} && tar -cpf "../ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar" . && cd .. && rm -rf ${chroot_dir}
-../scripts/build-image.sh "ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar"
-rm -f "ubuntu-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64-${BOARD}.rootfs.tar"
+cd ${chroot_dir} && tar -cpf "../${DESTNAME}.tar" . && cd .. && rm -rf ${chroot_dir}
+../scripts/build-image.sh "${DESTNAME}.tar"
+rm -f "${DESTNAME}.tar"

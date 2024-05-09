@@ -147,7 +147,7 @@ jobs:
         shell: bash
         run: | 
           sudo ./build.sh --cached --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit == 'true'
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1

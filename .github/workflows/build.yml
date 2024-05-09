@@ -6,9 +6,71 @@ on:
 run-name: Build Debian 12 and 13
 
 jobs:
+  cache:
+    runs-on: ubuntu-latest
+    name: Build OS Cache
+    strategy:
+      matrix:
+        suite:
+            - bookworm
+            - trixie
+    steps:        
+      - name: Get more disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: 'td512/debian-live-build'
+      
+      - name: Restore OS Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ./os.tar
+          key: os-cache-${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+
+      - name: Install dependencies
+        shell: bash
+        run: scripts/install-dependencies.sh
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: debootstrap
+        shell: bash
+        run: scripts/debootstrap.sh $(pwd) ${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: setup chroot
+        run: scripts/setup-chroot.sh $(pwd)
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: debootstrap stage 2
+        run: scripts/complete-debootstrap.sh $(pwd)
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: cleanup script
+        run: scripts/cleanup.sh $(pwd)
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: tarball installation directory
+        run: sudo tar -p -c --sort=name --xattrs os.tar debian
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - uses: actions/cache@v4
+        with:
+          path: ./os.tar
+          key: os-cache-${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+        if: steps.cache.outputs.cache-hit != 'true'
   rootfs:
     continue-on-error: true
     runs-on: ubuntu-latest
+    needs: [cache]
     name: Build rootfs 
     strategy:
         matrix:
@@ -64,10 +126,28 @@ jobs:
         shell: bash
         run: git lfs fetch && git lfs checkout
 
-      - name: Build
+      - name: Restore OS Cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ./build/debian-live-build/os.tar
+          key: os-cache-${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+
+      - name: Extract OS Cache
+        shell: bash
+        run: cd ./build/debian-live-build && tar xf os.tar
+        if: steps.cache.outputs.cache-hit == 'true'
+
+      - name: Build OS (No Cache)
         shell: bash
         run: | 
           sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Build OS (With Cache)
+        shell: bash
+        run: | 
+          sudo ./build.sh --cached --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1

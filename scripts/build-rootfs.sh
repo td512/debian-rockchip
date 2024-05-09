@@ -41,4 +41,8 @@ fi
 
 git clone https://github.com/td512/debian-live-build.git
 cd debian-live-build
-bash ./build.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
+if [[ ${USE_CACHE} == "Y" ]]; then
+    bash ./build-with-cache.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
+else
+    bash ./build.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
+fi

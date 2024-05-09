@@ -111,6 +111,10 @@ while [ "$#" -gt 0 ]; do
             export CLEAN=Y
             shift
             ;;
+        --cached)
+            export USE_CACHE=Y
+            shift
+            ;;
         -v|--verbose)
             set -x
             shift

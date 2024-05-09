@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./os.tar
-          key: os-cache-${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+          key: os-cache-${{ matrix.suite }}
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Get more disk space
@@ -46,7 +46,7 @@ jobs:
 
       - name: debootstrap
         shell: bash
-        run: scripts/debootstrap.sh $(pwd) ${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+        run: scripts/debootstrap.sh $(pwd) ${{ matrix.suite }}
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: setup chroot
@@ -60,7 +60,7 @@ jobs:
       - name: post debootstrap
         run: |
           sudo cp scripts/post-debootstrap.sh debian
-          sudo chroot debian ./post-debootstrap.sh $suite
+          sudo chroot debian ./post-debootstrap.sh ${{ matrix.suite }}
           sudo rm debian/post-debootstrap.sh
         if: steps.cache.outputs.cache-hit != 'true'
 
@@ -75,7 +75,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: ./os.tar
-          key: os-cache-${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+          key: os-cache-${{ matrix.suite }}
         if: steps.cache.outputs.cache-hit != 'true'
   rootfs:
     continue-on-error: true
@@ -141,7 +141,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ./build/debian-live-build/os.tar
-          key: os-cache-${{ matrix.suite == 'bookworm' && 'bookworm' || matrix.suite == 'trixie' && 'trixie' }}
+          key: os-cache-${{ matrix.suite }}
 
       - name: Extract OS Cache
         shell: bash

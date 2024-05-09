@@ -6,70 +6,9 @@ on:
 run-name: Build Debian 12 and 13
 
 jobs:
-  cache:
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
-    name: Build OS Cache
-    strategy:
-      matrix:
-        suite:
-          - bookworm
-          - trixie
-    steps:        
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          repository: 'td512/debian-live-build'
-      
-      - name: Restore OS Cache
-        id: cache
-        uses: buildjet/cache/restore@v4
-        with:
-          path: ./os.tar
-          key: 'os-cache-${{ matrix.suite }}'
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: Install dependencies
-        shell: bash
-        run: scripts/install-dependencies.sh
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: debootstrap
-        shell: bash
-        run: scripts/debootstrap.sh $(pwd) ${{ matrix.suite }}
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: setup chroot
-        run: scripts/setup-chroot.sh $(pwd)
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: debootstrap stage 2
-        run: scripts/complete-debootstrap.sh $(pwd)
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: post debootstrap
-        run: |
-          sudo cp scripts/post-debootstrap.sh debian
-          sudo chroot debian ./post-debootstrap.sh ${{ matrix.suite }}
-          sudo rm debian/post-debootstrap.sh
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: cleanup script
-        run: scripts/cleanup.sh $(pwd)
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - name: tarball installation directory
-        run: sudo tar -p -cf os.tar --sort=name --xattrs debian
-        if: steps.cache.outputs.cache-hit != 'true'
-
-      - uses: buildjet/cache@v4
-        with:
-          path: ./os.tar
-          key: 'os-cache-${{ matrix.suite }}'
-        if: steps.cache.outputs.cache-hit != 'true'
   rootfs:
     continue-on-error: true
     runs-on: buildjet-2vcpu-ubuntu-2204-arm
-    needs: [cache]
     name: Build rootfs 
     strategy:
         matrix:
@@ -115,29 +54,15 @@ jobs:
         shell: bash
         run: git lfs fetch && git lfs checkout
 
-      - name: Restore OS Cache
-        id: cache
-        uses: buildjet/cache/restore@v4
-        with:
-          path: ./build/debian-live-build/os.tar
-          key: os-cache-${{ matrix.release }}
-
-      - name: Extract OS Cache
-        shell: bash
-        run: cd ./build/debian-live-build && sudo tar xf os.tar
-        if: steps.cache.outputs.cache-hit == 'true'
-
       - name: Build OS (No Cache)
         shell: bash
         run: | 
           sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
-        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Build OS (With Cache)
         shell: bash
         run: | 
           sudo ./build.sh --cached --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
-        if: steps.cache.outputs.cache-hit == 'true'
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1

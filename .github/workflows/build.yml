@@ -120,7 +120,7 @@ jobs:
         uses: buildjet/cache/restore@v4
         with:
           path: ./build/debian-live-build/os.tar
-          key: 'os-cache-${{ matrix.project }}'
+          key: 'os-cache-${{ matrix.release }}'
 
       - name: Extract OS Cache
         shell: bash

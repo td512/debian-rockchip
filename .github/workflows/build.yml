@@ -37,6 +37,7 @@ jobs:
           haskell: true
           large-packages: true
           swap-storage: true
+        if: steps.cache.outputs.cache-hit != 'true'
 
       - name: Install dependencies
         shell: bash

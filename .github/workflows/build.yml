@@ -59,7 +59,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: tarball installation directory
-        run: sudo tar -p -c --sort=name --xattrs os.tar debian
+        run: sudo tar -p -cf os.tar --sort=name --xattrs debian
         if: steps.cache.outputs.cache-hit != 'true'
 
       - uses: actions/cache@v4

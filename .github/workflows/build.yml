@@ -138,7 +138,7 @@ jobs:
 
       - name: Extract OS Cache
         shell: bash
-        run: cd ./build/debian-live-build && tar xf os.tar
+        run: cd ./build/debian-live-build && sudo tar xf os.tar
         if: steps.cache.outputs.cache-hit == 'true'
 
       - name: Build OS (No Cache)

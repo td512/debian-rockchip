@@ -7,7 +7,7 @@ run-name: Build Debian 12 and 13
 
 jobs:
   rootfs:
-    runs-on: runs-on,runner=1cpu-linux-arm64,image=ubuntu22-full-arm64,run-id=${{ github.run_id }}
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
     name: Build rootfs 
     strategy:
         matrix:
@@ -73,11 +73,11 @@ jobs:
             compression-level: 9
         if: env.fail-gracefully != 'true'
   
-  build:
+  build-opi:
     continue-on-error: true
-    runs-on: runs-on,runner=1cpu-linux-arm64,image=ubuntu22-full-arm64,run-id=${{ github.run_id }}
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
     needs: [rootfs]
-    name: Build image 
+    name: Build image (Orange Pi)
 
     strategy:
       matrix:
@@ -87,20 +87,759 @@ jobs:
           - orangepi-5b
           - orangepi-5-plus
           - orangepi-5-pro
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+
+  build-rock:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Rock)
+
+    strategy:
+      matrix:
+        board:
           - rock-5b
           - rock-5a
           - rock-5-itx
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-radxa:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Radxa)
+
+    strategy:
+      matrix:
+        board:
           - radxa-cm5-io
           - radxa-nx5-io
           - radxa-zero3
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-nanopc:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Nano PC)
+
+    strategy:
+      matrix:
+        board:
           - nanopc-t6
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-nanopi:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Nano Pi)
+
+    strategy:
+      matrix:
+        board:
           - nanopi-r6c
           - nanopi-r6s
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-indiedroid:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Indiedroid)
+
+    strategy:
+      matrix:
+        board:
           - indiedroid-nova
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-mixtile:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Mixtile)
+
+    strategy:
+      matrix:
+        board:
           - mixtile-blade3
           - mixtile-core3588e
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-lubancat:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Lubancat)
+
+    strategy:
+      matrix:
+        board:
           - lubancat-4
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-turing:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (Turing)
+
+    strategy:
+      matrix:
+        board:
           - turing-rk1
+        project:
+          - desktop
+          - server
+        release:
+          - bookworm
+          - trixie
+        desktop:
+          - gnome
+          - gnome-flashback
+          - kde
+          - xfce
+          - lxde
+          - mate
+          - cinnamon
+          - lxqt
+          - none
+    steps:
+      - name: early exit (server workflow)
+        run: exit 1
+        if: matrix.project == 'server' && matrix.desktop != 'none'
+
+      - name: early exit (desktop workflow)
+        run: exit 1
+        if: matrix.project == 'desktop' && matrix.desktop == 'none'
+
+      - name: prepare filename (desktop)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'desktop'
+        
+      - name: prepare filename (server)
+        run: |
+          echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-rootfs">>$GITHUB_ENV
+        if: matrix.project == 'server'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+
+      - name: Checkout rootfs
+        uses: actions/download-artifact@v4.1.2
+        with:
+            name: ${{ env.filename }}
+            path: ./build/
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get upgrade -y
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu bison \
+          qemu-user-static qemu-system-arm qemu-efi u-boot-tools binfmt-support \
+          debootstrap flex libssl-dev bc rsync kmod cpio xz-utils fakeroot parted \
+          udev dosfstools uuid-runtime git-lfs device-tree-compiler python2 python3 \
+          python-is-python3 fdisk bc debhelper python3-pyelftools python3-setuptools \
+          python3-distutils python3-pkg-resources swig libfdt-dev libpython3-dev dctrl-tools
+
+      - name: Build
+        shell: bash
+        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+
+      - name: Upload
+        uses: actions/upload-artifact@v4.3.1
+        with:
+          name: debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}
+          path: ./images/debian-*-preinstalled-${{ matrix.project }}-arm64-${{ matrix.board }}.*
+          if-no-files-found: error
+
+      - name: Clean cache
+        shell: bash
+        run: sync && sudo rm -rf ./images/ ./build/ && sync
+  build-armsom:
+    continue-on-error: true
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    needs: [rootfs]
+    name: Build image (ARMSOM)
+
+    strategy:
+      matrix:
+        board:
           - armsom-sige7
           - armsom-w3
         project:

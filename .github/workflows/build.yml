@@ -19,13 +19,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout debian-live-build
-        run: mkdir build && cd build && git clone https://github.com/td512/debian-live-build && cd debian-live-build
+        run: mkdir build && cd build && git clone https://github.com/td512/debian-live-build
 
       - name: Restore OS Cache
         id: cache
         uses: buildjet/cache/restore@v4
         with:
-          path: ./build/debian-live-build/os.tar
+          path: ./os.tar
           key: 'os-cache-${{ matrix.suite }}'
 
       - name: Install dependencies
@@ -59,12 +59,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: tarball installation directory
-        run: cd ./build/debian-live-build && sudo tar -p -cf os.tar --sort=name --xattrs debian
+        run: cd ./build/debian-live-build && sudo tar -p -cf os.tar --sort=name --xattrs debian && mv os.tar ..
         if: steps.cache.outputs.cache-hit != 'true'
 
       - uses: buildjet/cache@v4
         with:
-          path: ./build/debian-live-build/os.tar
+          path: ./build/os.tar
           key: 'os-cache-${{ matrix.suite }}'
         if: steps.cache.outputs.cache-hit != 'true'
   rootfs:

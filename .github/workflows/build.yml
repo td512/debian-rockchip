@@ -8,7 +8,7 @@ run-name: Build Debian 12 and 13
 jobs:
   rootfs:
     continue-on-error: true
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: runs-on,runner=4cpu-linux-arm64
     name: Build rootfs 
     strategy:
         matrix:
@@ -70,7 +70,7 @@ jobs:
   
   build:
     continue-on-error: true
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: runs-on,runner=4cpu-linux-arm64
     needs: [rootfs]
     name: Build image 
 

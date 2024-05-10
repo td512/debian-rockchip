@@ -18,8 +18,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Checkout LFS
-        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout && cd build/debian-live-build
+      - name: Checkout debian-live-build
+        run: mkdir build && cd build && git clone https://github.com/td512/debian-live-build && cd debian-live-build
 
       - name: Restore OS Cache
         id: cache
@@ -63,7 +63,7 @@ jobs:
 
       - uses: buildjet/cache@v4
         with:
-          path: ./os.tar
+          path: ./build/debian-live-build/os.tar
           key: 'os-cache-${{ matrix.suite }}'
         if: steps.cache.outputs.cache-hit != 'true'
   rootfs:

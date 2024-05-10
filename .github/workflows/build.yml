@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout debian-live-build
-        run: mkdir build && cd build && git clone https://github.com/td512/debian-live-build && cd debian-live-build
+        run: mkdir build && cd build && git clone https://github.com/td512/debian-live-build && cd debian-live-build && pwd
 
       - name: Restore OS Cache
         id: cache
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: scripts/install-dependencies.sh
+        run: pwd && scripts/install-dependencies.sh
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: debootstrap

@@ -8,7 +8,7 @@ run-name: Build Debian 12 and 13
 jobs:
   rootfs:
     continue-on-error: true
-    runs-on: runs-on,runner=4cpu-linux-arm64
+    runs-on: runs-on,runner=4cpu-linux-arm64,image=ubuntu22-full-arm64,run-id=${{ github.run_id }}
     name: Build rootfs 
     strategy:
         matrix:
@@ -70,7 +70,7 @@ jobs:
   
   build:
     continue-on-error: true
-    runs-on: runs-on,runner=4cpu-linux-arm64
+    runs-on: runs-on,runner=2cpu-linux-arm64,image=ubuntu22-full-arm64,run-id=${{ github.run_id }}
     needs: [rootfs]
     name: Build image 
 

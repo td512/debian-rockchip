@@ -121,7 +121,7 @@ jobs:
 
       - name: Restore OS Cache
         id: cache
-        uses: buildjet/cache/restore@v4
+        uses: actions/cache/restore@v4
         with:
           path: ./build/os.tar
           key: 'os-cache-${{ matrix.release }}'

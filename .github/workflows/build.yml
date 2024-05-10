@@ -7,7 +7,7 @@ run-name: Build Debian 12 and 13
 
 jobs:
   cache:
-    runs-on: buildjet-16vcpu-ubuntu-2204-arm
+    runs-on: buildjet-8vcpu-ubuntu-2204-arm
     name: Build OS Cache
     strategy:
       matrix:

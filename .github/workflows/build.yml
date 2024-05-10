@@ -17,14 +17,17 @@ jobs:
     steps:        
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          repository: 'td512/debian-live-build'
+
+      - name: Checkout LFS
+        shell: bash
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+        if: env.fail-gracefully != 'true'
 
       - name: Restore OS Cache
         id: cache
         uses: buildjet/cache/restore@v4
         with:
-          path: ./os.tar
+          path: ./build/debian-live-build/os.tar
           key: 'os-cache-${{ matrix.suite }}'
 
       - name: Install dependencies

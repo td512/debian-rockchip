@@ -7,7 +7,6 @@ run-name: Build Debian 12 and 13
 
 jobs:
   rootfs:
-    continue-on-error: true
     runs-on: runs-on,runner=4cpu-linux-arm64,image=ubuntu22-full-arm64,run-id=${{ github.run_id }}
     name: Build rootfs 
     strategy:
@@ -30,34 +29,39 @@ jobs:
           - none
     steps:
       - name: early exit (server workflow)
-        run: exit 1
+        run: |
+          echo "fail-gracefully=true">>$GITHUB_ENV
         if: matrix.project == 'server' && matrix.desktop != 'none'
 
       - name: early exit (desktop workflow)
-        run: exit 1
+        run: |
+          echo "fail-gracefully=true">>$GITHUB_ENV
         if: matrix.project == 'desktop' && matrix.desktop == 'none'
 
       - name: prepare filename (desktop)
         run: |
           echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-${{ matrix.desktop }}-preinstalled-${{ matrix.project }}-arm64.rootfs">>$GITHUB_ENV
-        if: matrix.project == 'desktop'
+        if: matrix.project == 'desktop' && env.fail-gracefully != 'true'
         
       - name: prepare filename (server)
         run: |
           echo "filename=debian-${{ matrix.release == 'bookworm' && '12' || matrix.release == 'trixie' && '13' }}-preinstalled-${{ matrix.project }}-arm64.rootfs">>$GITHUB_ENV
-        if: matrix.project == 'server'
+        if: matrix.project == 'server' && env.fail-gracefully != 'true'
 
       - name: Checkout code
         uses: actions/checkout@v4
+        if: env.fail-gracefully != 'true'
 
       - name: Checkout LFS
         shell: bash
         run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
+        if: env.fail-gracefully != 'true'
 
       - name: Build OS
         shell: bash
         run: | 
           sudo ./build.sh --board=orangepi-5 --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --rootfs-only --launchpad
+        if: env.fail-gracefully != 'true'
 
       - name: Upload
         uses: actions/upload-artifact@v4.3.1
@@ -67,6 +71,7 @@ jobs:
             if-no-files-found: error
             overwrite: true
             compression-level: 9
+        if: env.fail-gracefully != 'true'
   
   build:
     continue-on-error: true

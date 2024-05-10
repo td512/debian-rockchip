@@ -19,9 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout LFS
-        shell: bash
-        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
-        if: env.fail-gracefully != 'true'
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout && cd build/debian-live-build
 
       - name: Restore OS Cache
         id: cache

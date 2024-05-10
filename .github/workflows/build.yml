@@ -12,8 +12,8 @@ jobs:
     strategy:
         matrix:
           project:
-            - server
             - desktop
+            - server
           release:
             - bookworm
             - trixie

@@ -35,15 +35,15 @@ jobs:
 
       - name: debootstrap
         shell: bash
-        run: scripts/debootstrap.sh $(pwd)/build/debian-live-build ${{ matrix.suite }}
+        run: ./build/debian-live-build/scripts/debootstrap.sh $(pwd)/build/debian-live-build ${{ matrix.suite }}
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: setup chroot
-        run: scripts/setup-chroot.sh $(pwd)/build/debian-live-build
+        run: ./build/debian-live-build/scripts/setup-chroot.sh $(pwd)/build/debian-live-build
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: debootstrap stage 2
-        run: scripts/complete-debootstrap.sh $(pwd)/build/debian-live-build
+        run: ./build/debian-live-build/scripts/complete-debootstrap.sh $(pwd)/build/debian-live-build
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: post debootstrap
@@ -55,7 +55,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: cleanup script
-        run: scripts/cleanup.sh $(pwd)/build/debian-live-build
+        run: ./build/debian-live-build/scripts/cleanup.sh $(pwd)/build/debian-live-build
         if: steps.cache.outputs.cache-hit != 'true'
 
       - name: tarball installation directory

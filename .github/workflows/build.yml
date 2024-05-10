@@ -23,7 +23,7 @@ jobs:
 
       - name: Restore OS Cache
         id: cache
-        uses: actions/cache/restore@v4
+        uses: buildjet/cache/restore@v4
         with:
           path: ./os.tar
           key: 'os-cache-${{ matrix.suite }}'
@@ -62,7 +62,7 @@ jobs:
         run: cd ./build/debian-live-build && sudo tar -p -cf os.tar --sort=name --xattrs debian && mv os.tar ..
         if: steps.cache.outputs.cache-hit != 'true'
 
-      - uses: actions/cache@v4
+      - uses: buildjet/cache@v4
         with:
           path: ./build/os.tar
           key: 'os-cache-${{ matrix.suite }}'
@@ -121,7 +121,7 @@ jobs:
 
       - name: Restore OS Cache
         id: cache
-        uses: actions/cache/restore@v4
+        uses: buildjet/cache/restore@v4
         with:
           path: ./build/os.tar
           key: 'os-cache-${{ matrix.release }}'

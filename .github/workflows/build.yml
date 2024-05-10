@@ -52,7 +52,7 @@ jobs:
 
       - name: Checkout LFS
         shell: bash
-        run: git lfs fetch && git lfs checkout
+        run: apt-get update && apt-get install -y git-lfs && git lfs fetch && git lfs checkout
 
       - name: Build OS
         shell: bash

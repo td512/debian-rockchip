@@ -138,7 +138,7 @@ jobs:
 
       - name: Checkout LFS
         shell: bash
-        run: git lfs fetch && git lfs checkout
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && git lfs fetch && git lfs checkout
 
       - name: Checkout rootfs
         uses: actions/download-artifact@v4.1.2

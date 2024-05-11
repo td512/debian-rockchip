@@ -43,7 +43,7 @@ git clone https://github.com/td512/debian-live-build.git
 cd debian-live-build
 
 if [[ ${USE_CACHE} == "Y" ]]; then
-    if [[ -z ${ARCHIVE} ]]; then
+    if [[ -n ${ARCHIVE} ]]; then
         # do nothing
         exit 0
     else

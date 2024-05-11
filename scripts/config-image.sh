@@ -105,9 +105,9 @@ overlay_dir=../overlay
 rm -rf ${chroot_dir} && mkdir -p ${chroot_dir}
 
 if [[ "$PROJECT" == "server" ]]; then
-    DESTNAME="debian-${version}-preinstalled-${name}-arm64.rootfs"
+    DESTNAME="debian-${RELEASE_VERSION}-preinstalled-${PROJECT}-arm64.rootfs"
 else
-    DESTNAME="debian-${version}-${DESKTOP}-preinstalled-${name}-arm64.rootfs"
+    DESTNAME="debian-${RELEASE_VERSION}-${DESKTOP}-preinstalled-${PROJECT}-arm64.rootfs"
 fi
 
 tar -xpJf "${DESTNAME}.tar.xz" -C ${chroot_dir}

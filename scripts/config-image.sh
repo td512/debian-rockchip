@@ -110,12 +110,7 @@ else
     DESTNAME="debian-${RELEASE_VERSION}-${DESKTOP}-preinstalled-${PROJECT}-arm64.rootfs"
 fi
 
-ls -lah
-pwd
-ls -lah ..
-ls -lah *
-
-tar -xpJf "${DESTNAME}.tar.xz" -C ${chroot_dir}
+tar -xpJf "${DESTNAME}/${DESTNAME}.tar.xz" -C ${chroot_dir}
 
 # Mount the root filesystem
 setup_mountpoint $chroot_dir

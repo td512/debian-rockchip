@@ -118,7 +118,7 @@ jobs:
 
       - name: Checkout LFS
         shell: bash
-        run: mkdir -p build && git lfs fetch && git lfs checkout
+        run: sudo apt-get update && sudo apt-get install -y git-lfs && mkdir -p build && git lfs fetch && git lfs checkout
         if: env.fail-gracefully != 'true'
 
       - name: Restore OS Cache

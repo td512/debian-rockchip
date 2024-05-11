@@ -47,7 +47,7 @@ while [ "$#" -gt 0 ]; do
             ;;
         -a|--archive)
             export ARCHIVE="Y"
-            shift 2
+            shift
             ;;
         -b=*|--board=*)
             export BOARD="${1#*=}"

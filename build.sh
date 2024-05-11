@@ -16,6 +16,7 @@ Required arguments:
 
 Optional arguments:
   -h,  --help            show this help message and exit
+  -a,  --archive         archive mode - don't attempt build
   -c,  --clean           clean the build directory
   -d,  --docker          use docker to build
   -k,  --kernel=KERNEL   kernel target
@@ -27,6 +28,7 @@ Optional arguments:
   -m,  --mainline        use mainline linux sources
   -l,  --launchpad       use kernel and uboot from launchpad repo
   -v,  --verbose         increase the verbosity of the bash script
+       --cached          use cached OS tarchive instead of building
 HEREDOC
 }
 
@@ -42,6 +44,10 @@ while [ "$#" -gt 0 ]; do
         -h|--help)
             usage
             exit 0
+            ;;
+        -a|--archive)
+            export ARCHIVE="Y"
+            shift 2
             ;;
         -b=*|--board=*)
             export BOARD="${1#*=}"

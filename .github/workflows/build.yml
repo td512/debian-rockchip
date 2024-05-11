@@ -228,7 +228,7 @@ jobs:
 
       - name: Build
         shell: bash
-        run: sudo ./build.sh --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
+        run: sudo ./build.sh --cached --archive --board=${{ matrix.board }} --release=${{ matrix.release }} --project=${{ matrix.project }} --desktop=${{ matrix.desktop }} --launchpad
         if: env.fail-gracefully != 'true'
 
       - name: Upload

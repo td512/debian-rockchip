@@ -43,9 +43,14 @@ git clone https://github.com/td512/debian-live-build.git
 cd debian-live-build
 
 if [[ ${USE_CACHE} == "Y" ]]; then
-    mv ../os.tar .
-    tar xf os.tar
-    bash ./build-with-cache.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
+    if [[ -z ${ARCHIVE} ]]; then
+        # do nothing
+        exit 0
+    else
+        mv ../os.tar .
+        tar xf os.tar
+        bash ./build-with-cache.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
+    fi
 else
     bash ./build.sh "--${PROJECT}" "--${RELEASE}" -de "${DESKTOP}"
 fi

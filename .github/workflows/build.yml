@@ -7,7 +7,7 @@ run-name: Build Debian 12 and 13
 
 jobs:
   cache:
-    runs-on: buildjet-8vcpu-ubuntu-2204-arm
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
     name: Build OS Cache
     strategy:
       matrix:
@@ -69,7 +69,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
   rootfs:
     needs: [cache]
-    runs-on: buildjet-8vcpu-ubuntu-2204-arm
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
     name: Build rootfs 
     strategy:
         matrix:

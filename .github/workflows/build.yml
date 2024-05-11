@@ -26,7 +26,7 @@ jobs:
         id: cache
         uses: buildjet/cache/restore@v4
         with:
-          path: ./os.tar
+          path: ./build/os.tar
           key: 'os-cache-${{ matrix.suite }}'
 
       - name: Install dependencies
